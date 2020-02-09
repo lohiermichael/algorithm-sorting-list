@@ -2,7 +2,7 @@ from typing import List
 from testing import test_sorting_algo
 
 
-def insertion(L: List) -> List:
+def insertion_sort(L: List) -> List:
     """
     This will perform the insertion sort algorithm
     Args:
@@ -20,4 +20,4 @@ def insertion(L: List) -> List:
 
 
 if __name__ == '__main__':
-    test_sorting_algo(algo_name=insertion, number_tests=10)
+    test_sorting_algo(algo_name=insertion_sort, number_tests=10)
