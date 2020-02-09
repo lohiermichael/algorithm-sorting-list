@@ -1,14 +1,14 @@
 import time
-from jedi.evaluate.context import function
-from typing import *
+from typing import Callable, Union
 import statistics
 import matplotlib.pyplot as plt
 import pandas as pd
 from inputs import InputList
+from scipy.signal import lfilter
 
 
 class AlgoAnalysis:
-    def __init__(self, algo: function):
+    def __init__(self, algo: Callable):
         """
         For a given problem in algorithmic that takes a standardized input (for instance: a list)
         this class will give information of the running time of the algorithm. It will also
@@ -41,52 +41,44 @@ class AlgoAnalysis:
         return end_time - start_time
 
     def calculate_time_multiple_lists(self, range_length: int, harmonization: bool = True,
-                                      factor_harmonization: int = 5, **kwargs) -> pd.Series:
+                                      f_harmonization: Union[int, list] = 10, **kwargs) -> \
+            Union[pd.Series, pd.DataFrame]:
         """
         Generate random input lists of variate length within the range size
         and perform the time computation
         Parameters
         ----------
         range_length: range of length of the input lists to test: from 1 to range_length
-        harmonization: remove the noise by trying several times the same algo for different
-                        lists of a given length and taking the average running time
-        factor_harmonization: if harmonization is True, this value is the number of trials
-                            of different lists of the same size to harmonize
+        harmonization: reduce noise of the curve
+        f_harmonization: harmonization factor, an integer or a list the bigger n the smoother the curve will be
         kwargs: the other arguments of the input lists
+
         Returns
         -------
         List[float]
         """
+        res_time_l = [self.calculate_time_single_list(input_l=InputList(l_length=l_length, **kwargs))
+                      for l_length in range(1, range_length + 1)]
+        dict_res_time = {'raw': res_time_l}
+
         if harmonization:
-            res_time_l = []
-            for l_length in range(1, range_length + 1):
-                times_with_l_length = []
-                for _ in range(factor_harmonization):
-                    times_with_l_length.append(self.calculate_time_single_list(input_l=
-                                                                               InputList(l_length=l_length,
-                                                                                         **kwargs)))
-                res_time_l.append(statistics.mean(times_with_l_length))
+            if type(f_harmonization) == int:
+                f_harmonization = [f_harmonization]
+            # It is a list
+            for n in f_harmonization:
+                b = [1.0 / n] * n
+                a = 1
+                res_time_filtered = lfilter(b, a, res_time_l)
+                dict_res_time[f'harmonization (n={n})'] = res_time_filtered
 
-        else:
-            res_time_l = [self.calculate_time_single_list(input_l=InputList(l_length=l_length, **kwargs))
-                          for l_length in range(1, range_length + 1)]
-
-        # Transform in Series to plot the result with a simple .plot() later
-        res_time = pd.Series(res_time_l)
-        res_time.index = res_time.index + 1
-        res_time.name = f"Harmonization {factor_harmonization}"
-
+        res_time = pd.DataFrame(dict_res_time)
+        res_time.index += 1
         return res_time
 
 
 if __name__ == '__main__':
-    test_input_list = InputList(l_length=100000, max_value=1000000000)
-    # print(test_input_list)
-    # print(sorted(test_input_list))
     algo_test = AlgoAnalysis(sorted)
-    print(algo_test)
-    fig, ax = plt.subplots(figsize=(10, 10))
-    for factor_harmonization in range(1, 10, 1):
-        res = algo_test.calculate_time_multiple_lists(range_length=100, factor_harmonization=factor_harmonization)
-        res.plot(legend=res.name)
+    df = algo_test.calculate_time_multiple_lists(range_length=1000, harmonization=True, f_harmonization=[2, 20, 200])
+    print(df)
+    df.plot()
     plt.show()
