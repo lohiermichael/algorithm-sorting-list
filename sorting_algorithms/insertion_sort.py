@@ -1,5 +1,5 @@
-from inputs import InputList
 from typing import List
+from testing import test_sorting_algo
 
 
 def insertion(L: List) -> List:
@@ -20,9 +20,4 @@ def insertion(L: List) -> List:
 
 
 if __name__ == '__main__':
-    count_err = 0
-    for i in range(100):
-        L = InputList(l_length=10, min_value=0, max_value=100)
-        if insertion(L) != sorted(L):
-            count_err += 1
-    print(f'There are {count_err} errors')
+    test_sorting_algo(algo_name=insertion, number_tests=10)
