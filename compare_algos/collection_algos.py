@@ -2,6 +2,8 @@ from complexity_evaluation.output_algo import AlgoAnalysis
 from typing import *
 import pandas as pd
 from inputs import InputList
+from sorting_algorithms.merge_sort import merge_sort
+import matplotlib.pyplot as plt
 
 
 class CollectionAlgos(List[AlgoAnalysis]):
@@ -44,7 +46,7 @@ class CollectionAlgos(List[AlgoAnalysis]):
         -------
         bool
         """
-        return len(set([algo(l) for algo in self.list_algorithms])) == 1
+        return len(set(map(tuple, [algo(l) for algo in self.list_algorithms]))) == 1
 
     def calculate_time_single_list(self, **kwargs) -> Dict[str, List[float]]:
         """
@@ -71,13 +73,21 @@ class CollectionAlgos(List[AlgoAnalysis]):
         return {algo_analysis.algo_name: algo_analysis.calculate_time_single_list(input_l=random_list)
                 for algo_analysis in self}
 
-    def calculate_time_multiple_lists(self, range_length: int, **kwargs):
+    def calculate_time_multiple_lists(self,
+                                      range_length: int,
+                                      harmonization: bool = True,
+                                      f_harmonization=10,
+                                      worst_case: bool = False,
+                                      **kwargs):
         """
         Generate random input lists of variate length within the range size
         and perform the time computation for the different algorithms
         Parameters
         ----------
-        range_length (int): range of length of the input lists to test: from 1 to range_length
+        range_length: range of length of the input lists to test: from 1 to range_length
+        harmonization: reduce noise of the curve
+        f_harmonization: harmonization factor, an integer or a list the bigger n the smoother the curve will be
+        worst_case: will compare the algorithms in the worst case (reversed list) in the context of sorting algorithm
 
         Returns
         -------
@@ -90,11 +100,18 @@ class CollectionAlgos(List[AlgoAnalysis]):
         # as future column of the dataFrame
         # The values of the dataFrame are the times of computation
 
-        dict_of_series = {algo.__name__: algo.calculate_time_multiple_lists(range_length=range_length, **kwargs)
-                          for algo in self.list_algorithms}
-        return pd.DataFrame.from_dict(data=dict_of_series, orient='index')
+        dict_of_series = {algo_name: algo.calculate_time_multiple_lists(range_length=range_length,
+                                                                        harmonization=harmonization,
+                                                                        f_harmonization=f_harmonization,
+                                                                        worst_case=worst_case,
+                                                                        **kwargs).iloc[:, -1]
+                          for algo, algo_name in zip(self, self.list_algorithms_name)}
+        return pd.DataFrame.from_dict(data=dict_of_series)
 
 
 if __name__ == '__main__':
-    test = CollectionAlgos(sorted)
-    print(test)
+    compare_algo = CollectionAlgos(sorted, merge_sort)
+    test_list = InputList()
+    df = compare_algo.calculate_time_multiple_lists(range_length=1000, harmonization=False)
+    df.plot()
+    plt.show()
