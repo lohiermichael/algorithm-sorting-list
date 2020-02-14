@@ -1,6 +1,5 @@
 import time
 from typing import Callable, Union
-import statistics
 import matplotlib.pyplot as plt
 import pandas as pd
 from inputs import InputList
@@ -40,8 +39,12 @@ class AlgoAnalysis:
 
         return end_time - start_time
 
-    def calculate_time_multiple_lists(self, range_length: int, harmonization: bool = True,
-                                      f_harmonization: Union[int, list] = 10, **kwargs) -> \
+    def calculate_time_multiple_lists(self,
+                                      range_length: int,
+                                      harmonization: bool = False,
+                                      f_harmonization: Union[int, list] = 10,
+                                      worst_case: bool = True,
+                                      **kwargs) -> \
             Union[pd.Series, pd.DataFrame]:
         """
         Generate random input lists of variate length within the range size
@@ -51,13 +54,16 @@ class AlgoAnalysis:
         range_length: range of length of the input lists to test: from 1 to range_length
         harmonization: reduce noise of the curve
         f_harmonization: harmonization factor, an integer or a list the bigger n the smoother the curve will be
+        worst_case: in the context of list sorting, all the input lists will be ones of worse case (reversed)
         kwargs: the other arguments of the input lists
 
         Returns
         -------
         List[float]
         """
-        res_time_l = [self.calculate_time_single_list(input_l=InputList(l_length=l_length, **kwargs))
+        res_time_l = [self.calculate_time_single_list(input_l=InputList(l_length=l_length,
+                                                                        worst_case=worst_case,
+                                                                        **kwargs))
                       for l_length in range(1, range_length + 1)]
         dict_res_time = {'raw': res_time_l}
 
@@ -78,7 +84,7 @@ class AlgoAnalysis:
 
 if __name__ == '__main__':
     algo_test = AlgoAnalysis(sorted)
-    df = algo_test.calculate_time_multiple_lists(range_length=1000, harmonization=True, f_harmonization=[2, 20, 200])
+    df = algo_test.calculate_time_multiple_lists(range_length=10000, harmonization=True, f_harmonization=[2, 20, 200])
     print(df)
     df.plot()
     plt.show()
