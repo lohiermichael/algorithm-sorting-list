@@ -2,7 +2,11 @@ import random
 
 
 class InputList(list):
-    def __init__(self, l_length: int = 100, min_value: int = 0, max_value: int = 10000, distinct_elements: bool = True):
+    def __init__(self, l_length: int = 100,
+                 min_value: int = 0,
+                 max_value: int = 10000,
+                 distinct_elements: bool = True,
+                 worst_case: bool = False):
         """
         Object of input list for algorithms
         Parameters
@@ -11,11 +15,13 @@ class InputList(list):
         min_value (int): Minimal value of the elements of the list
         max_value (int): Maximal value of the elements of the list
         distinct_elements (bool): distinct elements in the list
+        worst_case (bool): in the context of list sorting, it gives a reversely sorted list
         """
         self.l_length = l_length
         self.min_value = min_value
         self.max_value = max_value
         self.distinct_elements = distinct_elements
+        self.worst_case = worst_case
         self._construct()
 
     def _find_element_not_in_set(self, already_used: set) -> int:
@@ -54,8 +60,10 @@ class InputList(list):
         else:
             for index in range(self.l_length):
                 self.append(random.randint(a=self.min_value, b=self.max_value))
+        if self.worst_case:
+            self.sort(reverse=True)
 
 
 if __name__ == '__main__':
-    test = InputList()
+    test = InputList(worst_case=True)
     print(test)
