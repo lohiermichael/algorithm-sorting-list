@@ -1,5 +1,4 @@
 from typing import List
-from inputs import InputList
 from testing import test_sorting_algo
 
 

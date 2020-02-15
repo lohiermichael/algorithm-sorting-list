@@ -1,7 +1,6 @@
 from typing import List
 import random
 from testing import test_sorting_algo
-from inputs import InputList
 
 
 def quick_sort_michael_first_element(L: List) -> List:
